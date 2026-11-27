@@ -1,0 +1,21 @@
+{
+  "name": "instra-crop",
+  "version": "1.0.0",
+  "description": "Batch photo cropper and Instagram border framing studio",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "keywords": [
+    "instagram",
+    "photo",
+    "crop",
+    "border",
+    "batch",
+    "electron"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^35.0.0"
+  }
+}

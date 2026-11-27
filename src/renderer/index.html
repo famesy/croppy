@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' file: data:; style-src 'self' 'unsafe-inline'; script-src 'self'" />
+  <title>InstraCrop Studio</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="app" class="app-shell">
+    <!-- Top Toolbar -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <div class="brand">
+          <span class="brand-icon">▣</span>
+          <span class="brand-name">InstraCrop</span>
+        </div>
+        <div class="divider"></div>
+        <button id="btnAddPhotos" class="btn btn-secondary" title="Add photo files">
+          + Add Photos
+        </button>
+        <button id="btnAddFolder" class="btn btn-secondary" title="Import all photos from a folder">
+          + Add Folder
+        </button>
+      </div>
+
+      <div class="topbar-center">
+        <div class="segmented" role="group" aria-label="Workspace mode">
+          <button id="btnModeCrop" class="seg-btn active" title="Crop photo (C)">Crop</button>
+          <button id="btnModePreview" class="seg-btn" title="Preview Instagram output (P or Space)">Preview</button>
+        </div>
+      </div>
+
+      <div class="topbar-right">
+        <span id="photoCounter" class="counter-pill">0 photos</span>
+        <button id="btnExportCurrent" class="btn btn-secondary" disabled>Export Current</button>
+        <button id="btnExportAll" class="btn btn-primary" disabled>Batch Export All</button>
+      </div>
+    </header>
+
+    <!-- Main 3-Pane Workspace -->
+    <main class="workspace">
+      <!-- Left Filmstrip -->
+      <aside class="sidebar-left">
+        <div class="sidebar-header">
+          <span>Batch Queue</span>
+          <button id="btnClearQueue" class="btn-text" title="Clear all photos" disabled>Clear</button>
+        </div>
+        <div id="filmstrip" class="filmstrip">
+          <div class="empty-queue">
+            No photos yet.<br />Drag &amp; drop photos or a folder here.
+          </div>
+        </div>
+      </aside>
+
+      <!-- Center Canvas Area -->
+      <section class="editor-stage">
+        <div id="dropOverlay" class="drop-overlay hidden">
+          <div class="drop-overlay-box">Drop photos or folders to add to batch</div>
+        </div>
+
+        <div id="emptyStage" class="empty-stage">
+          <div class="empty-card">
+            <div class="empty-icon">▣</div>
+            <h2>Batch Crop &amp; Frame for Instagram</h2>
+            <p>Drop your trip photos here, manually crop each shot, and pad with crisp white or black borders to fit Instagram's ideal aspect ratios.</p>
+            <div class="empty-actions">
+              <button id="btnEmptyPhotos" class="btn btn-primary">Select Photos</button>
+              <button id="btnEmptyFolder" class="btn btn-secondary">Select Folder</button>
+            </div>
+            <div class="shortcuts-hint">
+              <span><kbd>←</kbd> <kbd>→</kbd> Switch photo</span>
+              <span><kbd>Space</kbd> Toggle preview</span>
+              <span><kbd>R</kbd> Rotate 90°</span>
+            </div>
+          </div>
+        </div>
+
+        <div id="canvasWrap" class="canvas-wrap hidden">
+          <canvas id="mainCanvas"></canvas>
+        </div>
+
+        <!-- Bottom Action Strip -->
+        <div id="stageFooter" class="stage-footer hidden">
+          <div class="footer-group">
+            <button id="btnPrevPhoto" class="btn btn-icon" title="Previous photo (←)">◀</button>
+            <span id="activeFileName" class="active-filename">photo.jpg</span>
+            <button id="btnNextPhoto" class="btn btn-icon" title="Next photo (→)">▶</button>
+          </div>
+          <div class="footer-group">
+            <span id="cropDimensions" class="dim-badge">—</span>
+            <button id="btnRotateCCW" class="btn btn-secondary btn-sm" title="Rotate 90° CCW">↺ 90°</button>
+            <button id="btnRotateCW" class="btn btn-secondary btn-sm" title="Rotate 90° CW (R)">↻ 90°</button>
+            <button id="btnResetCrop" class="btn btn-secondary btn-sm" title="Reset crop to full image">Reset Crop</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right Inspector -->
+      <aside class="sidebar-right">
+        <!-- Live Instagram Preview Card -->
+        <div class="panel-section">
+          <div class="section-title-row">
+            <span class="section-title">Instagram Preview</span>
+            <span id="previewResBadge" class="badge">1080 × 1350</span>
+          </div>
+          <div class="mini-preview-box">
+            <canvas id="miniPreviewCanvas" width="240" height="300"></canvas>
+          </div>
+        </div>
+
+        <!-- Instagram Target Ratio -->
+        <div class="panel-section">
+          <div class="section-title">Instagram Ratio</div>
+          <div id="igRatioGrid" class="preset-grid">
+            <button class="preset-btn active" data-ratio="4:5">
+              <span class="preset-main">4:5</span>
+              <span class="preset-sub">Portrait</span>
+            </button>
+            <button class="preset-btn" data-ratio="1:1">
+              <span class="preset-main">1:1</span>
+              <span class="preset-sub">Square</span>
+            </button>
+            <button class="preset-btn" data-ratio="1.91:1">
+              <span class="preset-main">1.91:1</span>
+              <span class="preset-sub">Landscape</span>
+            </button>
+            <button class="preset-btn" data-ratio="9:16">
+              <span class="preset-main">9:16</span>
+              <span class="preset-sub">Story</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Crop Aspect Lock -->
+        <div class="panel-section">
+          <div class="section-title">Crop Aspect Ratio</div>
+          <div id="cropAspectGrid" class="chip-grid">
+            <button class="chip-btn active" data-aspect="free">Free</button>
+            <button class="chip-btn" data-aspect="original">Original</button>
+            <button class="chip-btn" data-aspect="1:1">1:1</button>
+            <button class="chip-btn" data-aspect="4:5">4:5</button>
+            <button class="chip-btn" data-aspect="5:4">5:4</button>
+            <button class="chip-btn" data-aspect="3:2">3:2</button>
+            <button class="chip-btn" data-aspect="2:3">2:3</button>
+            <button class="chip-btn" data-aspect="4:3">4:3</button>
+            <button class="chip-btn" data-aspect="3:4">3:4</button>
+            <button class="chip-btn" data-aspect="16:9">16:9</button>
+            <button class="chip-btn" data-aspect="9:16">9:16</button>
+            <button class="chip-btn" data-aspect="1.91:1">1.91:1</button>
+          </div>
+        </div>
+
+        <!-- Simple Photo Adjustments -->
+        <div class="panel-section">
+          <div class="section-title-row">
+            <span class="section-title">Photo Adjust</span>
+            <button id="btnResetAdjust" class="btn-text" title="Reset adjustments">Reset</button>
+          </div>
+          <div class="slider-row">
+            <div class="slider-label">
+              <span>Brightness</span>
+              <span id="brightnessValue">0</span>
+            </div>
+            <input id="brightnessSlider" type="range" min="-50" max="50" step="1" value="0" />
+          </div>
+          <div class="slider-row">
+            <div class="slider-label">
+              <span>Contrast</span>
+              <span id="contrastValue">0</span>
+            </div>
+            <input id="contrastSlider" type="range" min="-50" max="50" step="1" value="0" />
+          </div>
+          <div class="slider-row">
+            <div class="slider-label">
+              <span>Saturation</span>
+              <span id="saturationValue">0</span>
+            </div>
+            <input id="saturationSlider" type="range" min="-100" max="100" step="1" value="0" />
+          </div>
+        </div>
+
+        <!-- Border Color & Margin -->
+        <div class="panel-section">
+          <div class="section-title">Border Fill</div>
+          <div class="color-row">
+            <button class="swatch active" data-color="#ffffff" title="Pure White" style="background:#ffffff"></button>
+            <button class="swatch" data-color="#000000" title="Pure Black" style="background:#000000"></button>
+            <button class="swatch" data-color="#f5f2eb" title="Warm Paper" style="background:#f5f2eb"></button>
+            <button class="swatch" data-color="#18181b" title="Charcoal" style="background:#18181b"></button>
+            <label class="custom-color-wrap" title="Custom border color">
+              <input id="customColorInput" type="color" value="#ffffff" />
+              <span>Custom</span>
+            </label>
+          </div>
+
+          <div class="slider-row">
+            <div class="slider-label">
+              <span>Extra Margin</span>
+              <span id="marginValue">0%</span>
+            </div>
+            <input id="marginSlider" type="range" min="0" max="25" step="1" value="0" />
+          </div>
+
+          <button id="btnApplyFrameAll" class="btn btn-secondary btn-full" disabled>
+            Apply Frame Settings to All Photos
+          </button>
+        </div>
+
+        <!-- Export Settings -->
+        <div class="panel-section">
+          <div class="section-title">Export Settings</div>
+          <div class="form-row">
+            <label for="exportFormat">Format</label>
+            <select id="exportFormat" class="select-input select-sm">
+              <option value="jpeg">JPEG</option>
+              <option value="png">PNG (Lossless)</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <label for="exportResolution">Resolution</label>
+            <select id="exportResolution" class="select-input select-sm">
+              <option value="1x">Standard (1080px)</option>
+              <option value="2x">High-Res (2160px)</option>
+            </select>
+          </div>
+          <div id="qualityRow" class="slider-row">
+            <div class="slider-label">
+              <span>JPEG Quality</span>
+              <span id="qualityValue">95%</span>
+            </div>
+            <input id="qualitySlider" type="range" min="70" max="100" step="1" value="95" />
+          </div>
+        </div>
+      </aside>
+    </main>
+
+    <!-- Export Progress Modal -->
+    <div id="exportModal" class="modal hidden">
+      <div class="modal-card">
+        <h3 id="exportModalTitle">Exporting Photos…</h3>
+        <div class="progress-track">
+          <div id="exportProgressBar" class="progress-fill" style="width: 0%"></div>
+        </div>
+        <p id="exportStatusText" class="modal-status">Preparing…</p>
+        <div id="exportModalActions" class="modal-actions hidden">
+          <button id="btnOpenExportDir" class="btn btn-primary">Open Output Folder</button>
+          <button id="btnCloseExportModal" class="btn btn-secondary">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast hidden"></div>
+  </div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

@@ -214,7 +214,6 @@ function scheduleNeighborPrefetch(currentIndex) {
 }
 
 // Lazy tiny thumbnail generator (keeps filmstrip memory <2MB even for 500+ 24MP photos)
-const THUMB_SIZE = 96;
 const thumbQueue = [];
 let activeThumbWorkers = 0;
 const MAX_THUMB_WORKERS = 3;

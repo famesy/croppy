@@ -4,7 +4,44 @@
   "description": "Batch photo cropper and Instagram border framing studio",
   "main": "src/main.js",
   "scripts": {
-    "start": "electron ."
+    "start": "electron .",
+    "lint": "eslint .",
+    "test": "node --test",
+    "build": "electron-builder --publish never",
+    "build:win": "electron-builder --win --publish never",
+    "build:mac": "electron-builder --mac --publish never",
+    "build:linux": "electron-builder --linux --publish never"
+  },
+  "build": {
+    "appId": "com.famesy.croppy",
+    "productName": "Croppy",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "src/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ]
+    },
+    "mac": {
+      "category": "public.app-category.photography",
+      "target": [
+        "dmg",
+        "zip"
+      ]
+    },
+    "linux": {
+      "category": "Graphics",
+      "target": [
+        "AppImage",
+        "deb"
+      ]
+    }
   },
   "keywords": [
     "instagram",
@@ -16,6 +53,10 @@
   ],
   "license": "MIT",
   "devDependencies": {
-    "electron": "^35.0.0"
+    "@eslint/js": "^10.0.1",
+    "electron": "^35.0.0",
+    "electron-builder": "^26.18.0",
+    "eslint": "^10.15.0",
+    "globals": "^17.14.0"
   }
 }
